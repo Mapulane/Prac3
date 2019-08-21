@@ -40,8 +40,6 @@ void initGPIO(void){
 	}
 	
 	//Set Up the Seconds LED for PWM
-	//Write your logic here
-	//softPwmCreate(SECS,0,59);
 	pinMode(SECS, PWM_OUTPUT);
 	
 	printf("LEDS done\n");
@@ -53,7 +51,6 @@ void initGPIO(void){
 	}
 	
 	//Attach interrupts to Buttons
-	//Write your logic here
 	wiringPiISR(BTNS[0], INT_EDGE_FALLING, hourInc);
 	wiringPiISR(BTNS[1], INT_EDGE_FALLING, minInc);
 	wiringPiISR(BTNS[2], INT_EDGE_FALLING, toggleTime);
@@ -80,15 +77,13 @@ int main(void){
 	// Repeat this until we shut down
 	for (;;){
 		//Fetch the time from the RTC
-		//Write your logic here
 		int A = hexCompensation(wiringPiI2CReadReg8(RTC, HOUR));
 		mins = hexCompensation(wiringPiI2CReadReg8(RTC, MIN));
-		secs = hexCompensation(wiringPiI2CReadReg8(RTC, SEC)-0b10000000);
+		int s = wiringPiI2CReadReg8(RTC, SEC)-0b10000000
+		secs = hexCompensation(s);
 		hours = hFormat(A);
 		
 		//Function calls to toggle LEDs
-		//Write your logic here
-		
 		lightHours(hours);
 		lightMins(mins);
 		secPWM(secs);
@@ -122,6 +117,7 @@ int hFormat(int hours){
 void lightHours(int units){
 	// Write your logic to light up the hour LEDs here	
 	for(int i = 0; i < 4; i++){
+		// display hours on LED using bitshifting
 		digitalWrite(LEDS[i], (hours >> i & 1));
 		 //printf(" is: %x:%x\n", i, (hours>>i & 1);
 	}
@@ -140,11 +136,11 @@ void lightMins(int units){
  * The LED should be "off" at 0 seconds, and fully bright at 59 seconds
  */
 void secPWM(int units){
-	// Write your logic here
+	//set maximum value
 	pwmSetRange(59);
-	//int z = hexCompensation(units);
+	//write the seconds value to RTC
 	pwmWrite(SECS, units);
-	//softPwmWrite(SECS,units); 
+
 }
 
 /*
@@ -245,8 +241,8 @@ void minInc(void){
 		if (mins == 60){
 			 wiringPiI2CWriteReg8(RTC, MIN, 0x00);
 			mins = hexCompensation(wiringPiI2CReadReg8(RTC, MIN));
-			//hourInc();
-
+			
+			//increase hours by write the new value on the RTC
 			int A = hexCompensation(wiringPiI2CReadReg8(RTC, HOUR));
                 	hours = hFormat(A+1);
                 	int C = decCompensation(hours);
